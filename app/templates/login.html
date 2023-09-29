@@ -1,0 +1,26 @@
+<!-- /app/templates/login.html -->
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Авторизоваться</title>
+</head>
+<body>
+    <h2>Авторизоваться</h2>
+    {% with messages = get_flashed_messages() %}
+        {% if messages %}
+            <ul>
+                {% for message in messages %}
+                    <li>{{ message }}</li>
+                {% endfor %}
+            </ul>
+        {% endif %}
+    {% endwith %}
+    <form method="post" action="{{ url_for('login') }}">
+        {{ form.hidden_tag() }}
+        <p>{{ form.username.label }}<br>{{ form.username(size=32) }}</p>
+        <p>{{ form.password.label }}<br>{{ form.password(size=32) }}</p>
+        <p>{{ form.submit() }}</p>
+    </form>
+    <p>У вас нет учетной записи? <a href="{{ url_for('register') }}">Зарегистрируйтесь</a>.</p>
+</body>
+</html>
