@@ -164,13 +164,7 @@ app/__pycache__/__init__.cpython-311.pyc
 app/__pycache__/forms.cpython-311.pyc
 app/__pycache__/models.cpython-311.pyc
 app/__pycache__/routes.cpython-311.pyc
-instance/database.db
-migrations/__pycache__/env.cpython-311.pyc
-migrations/versions/__pycache__/e1b457f2ad4d_initial_migration.cpython-311.pyc
-app/__pycache__/__init__.cpython-311.pyc
-app/__pycache__/forms.cpython-311.pyc
-app/__pycache__/models.cpython-311.pyc
-app/__pycache__/routes.cpython-311.pyc
+
 instance/database.db
 migrations/__pycache__/env.cpython-311.pyc
 migrations/versions/__pycache__/e1b457f2ad4d_initial_migration.cpython-311.pyc
