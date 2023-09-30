@@ -10,6 +10,7 @@ login_manager = LoginManager(app)
 login_manager.login_view = 'login'  # Укажите маршрут для входа
 login_manager.login_message = 'Пожалуйста, войдите в систему, чтобы получить доступ к этой странице.'
 
+
 @login_manager.user_loader
 def load_user(user_id):
     return User.query.get(int(user_id))
@@ -31,9 +32,10 @@ def register():
         email = form.email.data
         password = form.password.data
         role = "Employee"
-        
+
         hashed_password = generate_password_hash(password, method='sha256')
-        new_user = User(username=username, email=email, password=hashed_password, role=role)
+        new_user = User(username=username, email=email,
+                        password=hashed_password, role=role)
         db.session.add(new_user)
         db.session.commit()
 
@@ -45,7 +47,7 @@ def register():
 
 @app.route("/login", methods=["GET", "POST"])
 def login():
-    
+
     if current_user.is_authenticated:
         return redirect(url_for('home'))
 
@@ -64,7 +66,8 @@ def login():
                 session['user_id'] = user.id
                 return redirect(url_for("home"))
             else:
-                flash("Неверные учетные данные. Пожалуйста, проверьте свое имя пользователя и пароль.", "danger")
+                flash(
+                    "Неверные учетные данные. Пожалуйста, проверьте свое имя пользователя и пароль.", "danger")
 
     except OperationalError as e:
         # Обработка ошибок базы данных
@@ -81,11 +84,13 @@ def logout():
     session.clear()
     return redirect(url_for("home"))
 
+
 @app.route("/preline.js")
 def serve_preline_js():
     return send_from_directory("../node_modules/preline/dist", "preline.js")
     logout_user()
     return redirect(url_for("home"))
+
 
 @app.route('/private')
 @login_required

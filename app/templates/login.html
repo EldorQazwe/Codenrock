@@ -8,23 +8,31 @@
 
 <body>
     <main class="main">
+        {% with messages = get_flashed_messages() %}
+        {% if messages %}
+        <ul>
+            {% for message in messages %}
+            <li>{{ message }}</li>
+            {% endfor %}
+        </ul>
+        {% endif %}
+        {% endwith %}
         <h1>Территория добрых дел</h1>
-        <hr/>
-        <form>
-            <div class="grid gap-y-4">
-                <div>
-                    <label for="email">{{form.username.label}}</label>
-                    {{form.username(size=32)}}
-                </div>
+        <hr />
+        <form method="POST" action="{{url_for('login')}}">
+            {{ form.hidden_tag() }}
+            <div>
+                <label for="username">{{form.username.label}}</label>
+                {{form.username(size=32)}}
+            </div>
 
-                <div>
-                    <label for="password">{{form.password.label}}</label>
-                    {{form.password(size=32)}}
-                </div>
+            <div>
+                <label for="password">{{form.password.label}}</label>
+                {{form.password(size=32)}}
+            </div>
 
-                <div class="content-centered">
-                    {{form.submit()}}
-                </div>
+            <div class="content-centered">
+                {{form.submit()}}
             </div>
         </form>
         </div>
