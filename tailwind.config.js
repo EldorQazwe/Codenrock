@@ -2,10 +2,11 @@
 module.exports = {
   content: [
     "./templates/**/*.html",
-    "./static/src/**/*.js"
+    "./static/src/**/*.js",
+    "node_modules/preline/dist/*.js",
   ],
   theme: {
     extend: {},
   },
-  plugins: [],
+  plugins: [require("preline/plugin"), require("@tailwindcss/forms")],
 }

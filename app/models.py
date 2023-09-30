@@ -1,97 +1,113 @@
 
-from app import db
 from flask_login import UserMixin
 from datetime import datetime
+from app import db
 
 class User(UserMixin, db.Model):
     id = db.Column(db.Integer, primary_key=True)
+    first_name = db.Column(db.String(60), nullable=False)
+    last_name = db.Column(db.String(60), nullable=False)
     username = db.Column(db.String(20), unique=True, nullable=False)
     email = db.Column(db.String(120), unique=True, nullable=False)
     password = db.Column(db.String(60), nullable=False)
-    role = db.Column(db.String(10), nullable=False)  # Employee [Работник] - Employer [Работодатель]
-    company_id = db.Column(db.Integer, db.ForeignKey('company.id'))  # Внешний ключ к компании
-    activities = db.relationship('UserActivity', back_populates='user')
-    selected_goals = db.relationship('FundGoal', backref='user', lazy=True)
+    role = db.Column(db.String(10), nullable=False)
+    company_id = db.Column(db.Integer, db.ForeignKey('company.id'))
+    points_balance = db.Column(db.Integer, default=0)
     
-    points_balance = db.Column(db.Integer, default=0)  # Текущий баланс баллов
-    
+    department_id = db.Column(db.Integer, db.ForeignKey('department.id'))
+    donations = db.relationship('Donation', backref='user', lazy=True)
+
     def __repr__(self):
         return f"User('{self.id}', '{self.username}', '{self.email}', '{self.role}', '{self.company_id}')"
 
 class Company(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     name = db.Column(db.String(50), unique=True, nullable=False)
-    employees = db.relationship('User', backref='company', lazy=True)  # Связь с работниками
-    employers = db.relationship('User', backref='employer', lazy=True)  # Связь с работодателями
+    total_balance = db.Column(db.Integer, nullable=False)
+    conversion_factor = db.Column(db.Integer, nullable=False, default=1)
+    
+    departments = db.relationship('Department', backref='company', lazy=True)
 
     def __repr__(self):
         return f"Company('{self.id}', '{self.name}')"
-    
-class Activity(db.Model):
-    
+
+class Department(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     name = db.Column(db.String(50), nullable=False)
-    users = db.relationship('UserActivity', back_populates='activity')
     
-    units = db.Column(db.String(20), nullable=False)  # Единицы измерения
-    active_time =  db.Column(db.Integer, nullable=False)  # Сколько кокосов за активность
-    points_per_unit = db.Column(db.Integer, nullable=False)  # Сколько кокосов за активность
-    active_date = db.Column(db.DateTime, default=datetime.utcnow) # Дата
+    company_id = db.Column(db.Integer, db.ForeignKey('company.id'), nullable=False)
+    employees = db.relationship('User', backref='department', lazy=True)
+
+    def __repr__(self):
+        return f"Department('{self.id}', '{self.name}', '{self.company_id}')"
+
+class Activity(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    name = db.Column(db.String(50), nullable=False)
+    user_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)
+    units = db.Column(db.String(20), nullable=False, default="Минут")
     
+    # active_time = db.Column(db.Integer, nullable=False)
+    amount_points = db.Column(db.Integer, nullable=False)
+    
+    # points_per_unit = db.Column(db.Integer, nullable=False)
+    reached = db.Column(db.Boolean, default=False) # Выполнено ли
+    active_date = db.Column(db.DateTime, default=datetime.utcnow)
+
     def __repr__(self):
         return f"Activity('{self.id}')"
 
-class UserActivity(db.Model):
-    user_id = db.Column(db.Integer, db.ForeignKey('user.id'), primary_key=True)
-    activity_id = db.Column(db.Integer, db.ForeignKey('activity.id'), primary_key=True)
-    stats = db.Column(db.String(100))
-    sport_units = db.Column(db.Integer, default=0)  # Колонка для количества единиц спорта
-    
-    user = db.relationship('User', back_populates='activities')
-    activity = db.relationship('Activity', back_populates='users')
-
-    def __repr__(self):
-        return f"User('{self.user_id}', '{self.activity_id}', '{self.stats}')"
-
+# Тут будут все фонды 
 class Fund(db.Model):
     id = db.Column(db.Integer, primary_key=True)
-    name = db.Column(db.String(50), unique=True, nullable=False)
-    category = db.Column(db.String(50), nullable=False) # категорию фонда (дети, животные и т.д.).
-    organization_name = db.Column(db.String(100), nullable=False) #  название организации фонда.
-    description = db.Column(db.Text) # описание фонда (в виде текста).
-    exchanges = db.relationship('UserExchange', back_populates='fund')
+    organization_name = db.Column(db.String(50), unique=True, nullable=False) # Название огранизации
+    category = db.Column(db.String(50), nullable=False) # (животные, дети, пожилые и т.д.)
+    location = db.Column(db.String(100), nullable=False) # Местоположения 
+    description = db.Column(db.String(300))  # Описание фонда
+    phone_number = db.Column(db.String(12)) # Телефон фонда
     
-    goals = db.relationship('FundGoal', back_populates='fund')
-
     def __repr__(self):
         return f"Fund('{self.id}', '{self.name}', '{self.category}', '{self.organization_name}')"
-    
+
+# Здесь цели фонда, то сколько надо будет собрать на ту или инную цель 
 class FundGoal(db.Model):
     id = db.Column(db.Integer, primary_key=True)
-    amount_in_rubles = db.Column(db.Float, nullable=False)
-    amount_in_points = db.Column(db.Integer, nullable=False)
-    fund_id = db.Column(db.Integer, db.ForeignKey('fund.id'), nullable=False)
-    reached = db.Column(db.Boolean, default=False)  # Показатель достижения цели
-    goal_date = db.Column(db.DateTime, nullable=False)
 
-    fund = db.relationship('Fund', back_populates='goals')
-    users = db.relationship('User', secondary='user_selected_goals', backref='selected_goals')
+    fund_id = db.Column(db.Integer, db.ForeignKey('fund.id'), nullable=False) # Ссылки 
+    user_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False) # Ссылки
 
+    name = db.Column(db.String(50), unique=True, nullable=False)
+
+    collected_amount =  db.Column(db.Float, default=0.0)  # Сумма, которую уже удалось собрать
+    target_amount = db.Column(db.Float, nullable=False)  # Общая целевая сумма для достижения
+    
+    reached = db.Column(db.Boolean, default=False) # Выполнено ли
+    goal_date = db.Column(db.DateTime, nullable=False, default=datetime.utcnow) # Дата создания цели
+    
     def __repr__(self):
-        return f"FundGoal('{self.id}', '{self.amount_in_rubles}', '{self.amount_in_points}', '{self.fund_id}', '{self.reached}', '{self.goal_date}')"
+        return f"FundGoal('{self.id}', '{self.fund_id}', '{self.reached}', '{self.goal_date}')"
 
-class UserExchange(db.Model):
+# История пожертовавания в ту или инную компанию, какого-то человека
+class Donation(db.Model):
+    
     id = db.Column(db.Integer, primary_key=True)
+    amount_points = db.Column(db.Float, nullable=False)
     user_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)
-    fund_id = db.Column(db.Integer, db.ForeignKey('fund.id'), nullable=False)
-    
-    sport_units = db.Column(db.Integer, nullable=False) # Кол-во спорт юнитов
-    points_donated = db.Column(db.Integer, nullable=False) # Сумма сколько получилось при (Юниты > Баллы)
-    exchange_date = db.Column(db.DateTime, default=datetime.utcnow) # Дата
-    amount_in_rubles = db.Column(db.Float, nullable=False) 
-    
-    user = db.relationship('User', back_populates='exchanges')
-    fund = db.relationship('Fund', back_populates='exchanges')
+    fund_goal_id = db.Column(db.Integer, db.ForeignKey('fund_goal.id'), nullable=False)
+    donation_date = db.Column(db.DateTime, nullable=False)
 
     def __repr__(self):
-        return f"UserExchange('{self.id}', '{self.user_id}', '{self.fund_id}', '{self.sport_units}', '{self.points_donated}')"
+        return f"Donation('{self.id}', '{self.amount_points}', '{self.user_id}', '{self.fund_goal_id}', '{self.donation_date}')"
+
+# class UserExchange(db.Model):
+#     id = db.Column(db.Integer, primary_key=True)
+#     user_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)
+#     fund_id = db.Column(db.Integer, db.ForeignKey('fund_goal.id'), nullable=False)
+#     activity_id = db.Column(db.Integer, db.ForeignKey('activity.id'), nullable=False)
+#     sport_units = db.Column(db.Integer, nullable=False)
+#     points_donated = db.Column(db.Integer, nullable=False)
+#     exchange_date = db.Column(db.DateTime, default=datetime.utcnow)
+#     amount_in_rubles = db.Column(db.Float, nullable=False)
+    
+#     def __repr__(self):
+#         return f"UserExchange('{self.id}', '{self.user_id}', '{self.fund_id}', '{self.sport_units}', '{self.points_donated}')"
