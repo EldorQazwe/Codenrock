@@ -1,0 +1,37 @@
+@tailwind base;
+@tailwind utilities;
+@tailwind variants;
+@tailwind components;
+
+main.main {
+  @apply max-w-sm mx-auto mt-7 p-4 bg-white border border-gray-200 rounded-xl shadow-sm sm:p-7;
+}
+
+h1 {
+  @apply text-center text-2xl mb-2;
+}
+
+hr {
+  @apply my-3;
+}
+
+form label {
+  @apply block text-sm mb-2;
+}
+
+form input[type="text"],
+form input[type="password"] {
+  @apply mb-3 py-3 px-4 block w-full border-gray-200 rounded-md text-sm focus:border-blue-500 focus:ring-blue-500;
+}
+
+.content-centered {
+  @apply flex flex-row justify-center;
+}
+
+form input[type="submit"] {
+  @apply w-5/12 self-center py-3 px-4 rounded-full border border-transparent font-semibold text-white focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 transition-all duration-500 text-sm;
+  background: #87a2f1;
+  &:hover {
+    background: #ff4365 !important;
+  }
+}

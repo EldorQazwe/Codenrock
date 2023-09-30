@@ -1,26 +1,36 @@
-<!-- /app/templates/login.html -->
 <!DOCTYPE html>
 <html>
+
 <head>
-    <title>Авторизоваться</title>
+    <title>Территория добрых дел</title>
+    <link rel="stylesheet" href="{{url_for('static',filename='dist/css/main.css')}}">
 </head>
+
 <body>
-    <h2>Авторизоваться</h2>
-    {% with messages = get_flashed_messages() %}
-        {% if messages %}
-            <ul>
-                {% for message in messages %}
-                    <li>{{ message }}</li>
-                {% endfor %}
-            </ul>
-        {% endif %}
-    {% endwith %}
-    <form method="post" action="{{ url_for('login') }}">
-        {{ form.hidden_tag() }}
-        <p>{{ form.username.label }}<br>{{ form.username(size=32) }}</p>
-        <p>{{ form.password.label }}<br>{{ form.password(size=32) }}</p>
-        <p>{{ form.submit() }}</p>
-    </form>
-    <p>У вас нет учетной записи? <a href="{{ url_for('register') }}">Зарегистрируйтесь</a>.</p>
+    <main class="main">
+        <h1>Территория добрых дел</h1>
+        <hr/>
+        <form>
+            <div class="grid gap-y-4">
+                <div>
+                    <label for="email">{{form.username.label}}</label>
+                    {{form.username(size=32)}}
+                </div>
+
+                <div>
+                    <label for="password">{{form.password.label}}</label>
+                    {{form.password(size=32)}}
+                </div>
+
+                <div class="content-centered">
+                    {{form.submit()}}
+                </div>
+            </div>
+        </form>
+        </div>
+    </main>
+
+    <script src="{{url_for('serve_preline_js')}}"></script>
 </body>
+
 </html>

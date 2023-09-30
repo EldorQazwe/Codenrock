@@ -1,14 +1,16 @@
-from flask import render_template, request, redirect, url_for, flash, session
+from flask import render_template, request, redirect, url_for, flash, session, send_from_directory
 from werkzeug.security import generate_password_hash, check_password_hash
 from app import app, db
 from app.models import User
 from app.forms import RegistrationForm, LoginForm
+
 
 @app.route("/")
 @app.route("/home")
 def home():
     print(url_for('static', filename='css/home.css'))
     return render_template("home.html")
+
 
 @app.route("/register", methods=["GET", "POST"])
 def register():
@@ -21,7 +23,8 @@ def register():
 
         hashed_password = generate_password_hash(password, method='sha256')
 
-        new_user = User(username=username, email=email, password=hashed_password)
+        new_user = User(username=username, email=email,
+                        password=hashed_password)
         db.session.add(new_user)
         db.session.commit()
 
@@ -29,6 +32,7 @@ def register():
         return redirect(url_for("login"))
 
     return render_template("register.html", form=form)
+
 
 @app.route("/login", methods=["GET", "POST"])
 def login():
@@ -45,11 +49,17 @@ def login():
             session['user_id'] = user.id
             return redirect(url_for("home"))
         else:
-            flash("Неверные учетные данные. Пожалуйста, проверьте свое имя пользователя и пароль.", "danger")
+            flash(
+                "Неверные учетные данные. Пожалуйста, проверьте свое имя пользователя и пароль.", "danger")
 
     return render_template("login.html", form=form)
+
 
 @app.route("/logout")
 def logout():
     session.clear()
     return redirect(url_for("home"))
+
+@app.route("/preline.js")
+def serve_preline_js():
+    return send_from_directory("../node_modules/preline/dist", "preline.js")
