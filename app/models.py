@@ -41,11 +41,20 @@ class Department(db.Model):
     def __repr__(self):
         return f"Department('{self.id}', '{self.name}', '{self.company_id}')"
 
+
+class ActivityType(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    name = db.Column(db.String(50), nullable=False, unique=True)
+    units = db.Column(db.String(20), nullable=False, default="Минут")
+    points_per_unit = db.Column(db.Integer, nullable=False)
+    
+    def __repr__(self):
+        return f"ActivityType('{self.name}')"
+
+
 class Activity(db.Model):
     id = db.Column(db.Integer, primary_key=True)
-    name = db.Column(db.String(50), nullable=False)
     user_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)
-    units = db.Column(db.String(20), nullable=False, default="Минут")
     
     # active_time = db.Column(db.Integer, nullable=False)
     amount_points = db.Column(db.Integer, nullable=False)
@@ -53,6 +62,8 @@ class Activity(db.Model):
     # points_per_unit = db.Column(db.Integer, nullable=False)
     reached = db.Column(db.Boolean, default=False) # Выполнено ли
     active_date = db.Column(db.DateTime, default=datetime.utcnow)
+
+    activity_type = db.relationship('ActivityType', backref='activities')
 
     def __repr__(self):
         return f"Activity('{self.id}')"
