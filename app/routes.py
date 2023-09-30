@@ -81,11 +81,16 @@ def get_top_donors():
 @app.route("/get_top_department")
 def get_top_department():
 
-    user = User.query.get(current_user.id)
+    user = User.query.get(current_user.id) 
     company = Company.query.get(user.company_id)
 
-    print(company)
+    department_ratings = db.session.query(
+        Department.name,
+        func.sum(Donation.amount_points).label('total_donations')
+    ).join(User, Department.id == User.department_id).join(Donation, User.id == Donation.user_id).filter(Department.company_id == current_user.company_id).group_by(Department.id).order_by(func.sum(Donation.amount_points).desc()).all()
 
+    print(current_user.id, company.departments, department_ratings) 
+    
     return "top_donors"
 
 # @login_required
@@ -188,50 +193,84 @@ def method_name():
 
 @app.route('/execute')
 def execute():
+    hashed_password = generate_password_hash("1234", method='sha256')
 
-    # Создание тестовых данных для модели User
-    user1 = User(first_name='John', last_name='Doe', username='johndoe', email='john.doe@example.com',
-                 password='password123', role='user', company_id=1, department_id=1, points_balance=100)
-    user2 = User(first_name='Jane', last_name='Smith', username='janesmith', email='jane.smith@example.com',
-                 password='password456', role='admin', company_id=2, department_id=2, points_balance=150)
-
-    # Создание тестовых данных для модели Company
-    company1 = Company(name='Company A', total_balance=1000,
-                       conversion_factor=2)
-    company2 = Company(name='Company B', total_balance=1500,
-                       conversion_factor=1)
-
-    # Создание тестовых данных для модели Department
-    department1 = Department(name='HR', company_id=1)
-    department2 = Department(name='IT', company_id=2)
-
-    # Создание тестовых данных для модели Activity
-    activity1 = Activity(name='Meeting', user_id=1, units='Minutes',
-                         amount_points=50, reached=False, active_date=datetime.utcnow())
-    activity2 = Activity(name='Coding', user_id=2, units='Minutes',
-                         amount_points=75, reached=True, active_date=datetime.utcnow())
-
-    # Создание тестовых данных для модели Fund
-    fund1 = Fund(organization_name='Animal Shelter', category='Animals', location='City A',
-                 description='A shelter for stray animals', phone_number='123-456-7890')
-    fund2 = Fund(organization_name='Children Foundation', category='Children', location='City B',
-                 description='Supporting children in need', phone_number='987-654-3210')
-
-    # Создание тестовых данных для модели FundGoal
-    fund_goal1 = FundGoal(fund_id=1, user_id=1, name='Animal Shelter Goal',
-                          collected_amount=500, target_amount=1000, reached=False, goal_date=datetime.utcnow())
-    fund_goal2 = FundGoal(fund_id=2, user_id=2, name='Children Foundation Goal',
-                          collected_amount=1500, target_amount=2000, reached=True, goal_date=datetime.utcnow())
-
-    # Создание тестовых данных для модели Donation
-    donation1 = Donation(amount_points=50, user_id=1,
-                         fund_goal_id=1, donation_date=datetime.utcnow())
-    donation2 = Donation(amount_points=100, user_id=2,
-                         fund_goal_id=2, donation_date=datetime.utcnow())
-
-    # Добавление данных в базу данных
-    db.session.add_all([user1, user2, company1, company2, department1, department2,
-                       activity1, activity2, fund1, fund2, fund_goal1, fund_goal2, donation1, donation2])
+    
+    # Create companies
+    company1 = Company(name='Company A', total_balance=100000, conversion_factor=2)
+    company2 = Company(name='Company B', total_balance=150000, conversion_factor=1.5)
+    db.session.add_all([company1, company2])
     db.session.commit()
 
+    # Create departments
+    department1 = Department(name='HR', company_id=company1.id)
+    department2 = Department(name='IT', company_id=company2.id)
+    db.session.add_all([department1, department2])
+    db.session.commit()
+
+    # Create activity types
+    activity_type1 = ActivityType(name='Running', units='Minutes', points_per_unit=5)
+    activity_type2 = ActivityType(name='Swimming', units='Minutes', points_per_unit=8)
+    db.session.add_all([activity_type1, activity_type2])
+    db.session.commit()
+
+    # Create users
+    hashed_password = generate_password_hash("1234", method='sha256')
+
+    user1 = User(
+        first_name='John',
+        last_name='Doe',
+        username='user1',
+        email='user1@example.com',
+        password=hashed_password,
+        role='employee',
+        company_id=company1.id,
+        department_id=department1.id,
+        points_balance=50
+    )
+
+    user2 = User(
+        first_name='Jane',
+        last_name='Smith',
+        username='user2',
+        email='user2@example.com',
+        password=hashed_password,
+        role='manager',
+        company_id=company2.id,
+        department_id=department2.id,
+        points_balance=30
+    )
+
+    user3 = User(
+        first_name='Admin',
+        last_name='User',
+        username='adminN',
+        email='admin@example.com',
+        password=hashed_password,
+        role='admin',
+        company_id=company1.id,
+        department_id=department1.id,
+        points_balance=100
+    )
+
+    db.session.add_all([user1, user2, user3])
+    db.session.commit()
+
+    # Create funds
+    fund1 = Fund(organization_name='Animal Rescue', category='Animals', location='City A', description='Rescuing animals in need', phone_number='123-456-7890')
+    fund2 = Fund(organization_name='Child Welfare', category='Children', location='City B', description='Supporting children in need', phone_number='987-654-3210')
+    db.session.add_all([fund1, fund2])
+    db.session.commit()
+
+    # Create fund goals
+    fund_goal1 = FundGoal(fund_id=fund1.id, user_id=user1.id, name='Rescue Mission', target_amount=500, goal_date=datetime.utcnow())
+    fund_goal2 = FundGoal(fund_id=fund2.id, user_id=user2.id, name='Education Support', target_amount=1000, goal_date=datetime.utcnow())
+    db.session.add_all([fund_goal1, fund_goal2])
+    db.session.commit()
+
+    # Create donations
+    donation1 = Donation(amount_points=50, user_id=user1.id, fund_goal_id=fund_goal1.id, donation_date=datetime.utcnow())
+    donation2 = Donation(amount_points=20, user_id=user2.id, fund_goal_id=fund_goal2.id, donation_date=datetime.utcnow())
+    db.session.add_all([donation1, donation2])
+    db.session.commit()
     return "Приватная страница"
