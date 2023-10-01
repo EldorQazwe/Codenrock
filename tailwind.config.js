@@ -1,5 +1,6 @@
 /** @type {import('tailwindcss').Config} */
 module.exports = {
+  darkMode: ["class", '[data-mode="dark-disabled"]'],
   content: [
     "./templates/**/*.html",
     "./static/src/**/*.js",
@@ -7,7 +8,65 @@ module.exports = {
     "./node_modules/tw-elements/dist/js/**/*.js",
   ],
   theme: {
-    extend: {},
+    extend: {
+      colors: {
+        darkBlue: {
+          100: "#ced1d4",
+          200: "#9da2aa",
+          300: "#6b747f",
+          400: "#3a4555",
+          500: "#09172a",
+          600: "#071222",
+          700: "#050e19",
+          800: "#040911",
+          900: "#020508",
+        },
+        blue: {
+          100: "#e7ecfc",
+          200: "#cfdaf9",
+          300: "#b7c7f7",
+          400: "#9fb5f4",
+          500: "#87a2f1",
+          600: "#6c82c1",
+          700: "#516191",
+          800: "#364160",
+          900: "#1b2030",
+        },
+        lightBlue: {
+          100: "#fafcff",
+          200: "#f6f9ff",
+          300: "#f1f5ff",
+          400: "#edf2ff",
+          500: "#e8efff",
+          600: "#babfcc",
+          700: "#8b8f99",
+          800: "#5d6066",
+          900: "#2e3033",
+        },
+        red: {
+          100: "#f8d5d5",
+          200: "#f1aaab",
+          300: "#eb8081",
+          400: "#e45557",
+          500: "#dd2b2d",
+          600: "#b12224",
+          700: "#851a1b",
+          800: "#581112",
+          900: "#2c0909",
+        },
+        redHover: {
+          100: "#ffd9e0",
+          200: "#ffb4c1",
+          300: "#ff8ea3",
+          400: "#ff6984",
+          500: "#ff4365",
+          600: "#cc3651",
+          700: "#99283d",
+          800: "#661b28",
+          900: "#330d14",
+        },
+      },
+    },
   },
   plugins: [
     require("preline/plugin"),

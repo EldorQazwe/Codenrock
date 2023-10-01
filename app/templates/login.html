@@ -4,21 +4,89 @@
 <head>
     <title>Территория добрых дел</title>
     <link rel="stylesheet" href="{{url_for('static',filename='dist/css/main.css')}}">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            darkMode: ['class', 'dark'],
+            theme: {
+                extend: {
+                    colors: {
+                        darkBlue: {
+                            100: "#ced1d4",
+                            200: "#9da2aa",
+                            300: "#6b747f",
+                            400: "#3a4555",
+                            500: "#09172a",
+                            600: "#071222",
+                            700: "#050e19",
+                            800: "#040911",
+                            900: "#020508",
+                        },
+                        blue: {
+                            100: "#e7ecfc",
+                            200: "#cfdaf9",
+                            300: "#b7c7f7",
+                            400: "#9fb5f4",
+                            500: "#87a2f1",
+                            600: "#6c82c1",
+                            700: "#516191",
+                            800: "#364160",
+                            900: "#1b2030",
+                        },
+                        lightBlue: {
+                            100: "#fafcff",
+                            200: "#f6f9ff",
+                            300: "#f1f5ff",
+                            400: "#edf2ff",
+                            500: "#e8efff",
+                            600: "#babfcc",
+                            700: "#8b8f99",
+                            800: "#5d6066",
+                            900: "#2e3033",
+                        },
+                        red: {
+                            100: "#f8d5d5",
+                            200: "#f1aaab",
+                            300: "#eb8081",
+                            400: "#e45557",
+                            500: "#dd2b2d",
+                            600: "#b12224",
+                            700: "#851a1b",
+                            800: "#581112",
+                            900: "#2c0909",
+                        },
+                        redHover: {
+                            100: "#ffd9e0",
+                            200: "#ffb4c1",
+                            300: "#ff8ea3",
+                            400: "#ff6984",
+                            500: "#ff4365",
+                            600: "#cc3651",
+                            700: "#99283d",
+                            800: "#661b28",
+                            900: "#330d14",
+                        },
+                    },
+                },
+            },
+        }
+    </script>
 </head>
 
 <body>
-    <main class="auth">
+    <main
+        class="max-w-full sm:max-w-sm mx-auto mt-7 p-4 bg-white border border-gray-200 sm:rounded-xl shadow-sm sm:p-7">
         {% with messages = get_flashed_messages() %}
         {% if messages %}
-        <ul>
+        <ul class="flex flex-col gap-3 mb-3 text-red-500">
             {% for message in messages %}
             <li>{{ message }}</li>
             {% endfor %}
         </ul>
         {% endif %}
         {% endwith %}
-        <h1>Территория добрых дел</h1>
-        <hr />
+        <h1 class="text-center text-2xl mb-2">Территория добрых дел</h1>
+        <hr class="my-3" />
         <form method="POST" action="{{url_for('login')}}">
             {{ form.hidden_tag() }}
             <div>

@@ -1,3 +1,4 @@
+from datetime import timedelta
 from flask import render_template, request, redirect, url_for, flash, session, send_from_directory, jsonify
 from werkzeug.security import generate_password_hash, check_password_hash
 from app import app, db
@@ -12,7 +13,6 @@ login_manager = LoginManager(app)
 login_manager.login_view = 'login'  # Укажите маршрут для входа
 login_manager.login_message = 'Пожалуйста, войдите в систему, чтобы получить доступ к этой странице.'
 
-from datetime import timedelta
 
 @login_manager.user_loader
 def load_user(user_id):
@@ -30,6 +30,7 @@ def authorize():
 
     return "Авторизация успешна"
 
+
 @app.route("/")
 @app.route("/home")
 @login_required
@@ -39,8 +40,6 @@ def home():
     company = Company.query.get(user.company_id)
     department = Department.query.get(user.department_id)
 
-    user_activities = Activity.query.filter_by(user_id=user.id).all()
-
     all_donors_query = (
         User.query
         .join(Donation)
@@ -49,40 +48,33 @@ def home():
         .add_columns(User.id, User.first_name, User.last_name, func.sum(Donation.amount_points).label('total_donations'))
         .all()
     )
-    
-    
-    # activities = []
 
-    # # Заполнить список информацией о каждой активности в формате key-value
-    # for activity in user_activities:
-    #     activity_info = {
-    #         "id": activity.id,
-    #         "AmountPoints": activity.amount_points,
-    #         "Active Date": activity.active_date,
-    #         "Activity Type ID": activity.activity_type_id
-    #     }
-    #     activities.append(activity_info)
-    
     user_position = None
     for index, donor in enumerate(all_donors_query):
         if donor.id == current_user.id:
             user_position = index + 1
 
-    
-    print(company.departments)
-    
+    total_points = int(user.points_balance +
+                       sum(donation.amount_points for donation in user.donations))
+
     data = {
         "user": {
             "first_name": user.first_name,
             "last_name": user.last_name,
             "balance": user.points_balance,
-            "total_donations": sum(donation.amount_points for donation in user.donations),
-            "personal_rating": user_position
+            "total_donations": int(sum(donation.amount_points for donation in user.donations)),
+            "personal_rating": user_position,
+            "total_points": total_points
         },
         "company": {
             "id": company.id,
             "company": company.name
-        }
+        },
+        "department": {
+            "id": department.id,
+            "name": department.name,
+        },
+        "activity_types": ActivityType.query.all()
     }
     return render_template("home.html", **data)
 
@@ -112,7 +104,7 @@ def get_top_donors():
 @app.route("/get_top_department")
 def get_top_department():
 
-    user = User.query.get(current_user.id) 
+    user = User.query.get(current_user.id)
     company = Company.query.get(user.company_id)
 
     department_ratings = db.session.query(
@@ -120,9 +112,10 @@ def get_top_department():
         func.sum(Donation.amount_points).label('total_donations')
     ).join(User, Department.id == User.department_id).join(Donation, User.id == Donation.user_id).filter(Department.company_id == current_user.company_id).group_by(Department.id).order_by(func.sum(Donation.amount_points).desc()).all()
 
-    print(current_user.id, company.departments, department_ratings) 
-    
+    print(current_user.id, company.departments, department_ratings)
+
     return "top_donors"
+
 
 @app.route('/rating/filter',  methods=["GET"])
 def filter_points_added():
@@ -169,8 +162,9 @@ def filter_points_added():
         return jsonify(result)
 
     except Exception as e:
+        print(e)
         return jsonify({"error": str(e)})
-    
+
 
 @app.route("/register", methods=["GET", "POST"])
 def register():
@@ -267,20 +261,22 @@ def method_name():
 
 @app.route('/balance')
 def add_balance():
-    
-    user_ids = [1, 2]  # Идентификаторы пользователей, для которых создаются данные
+
+    # Идентификаторы пользователей, для которых создаются данные
+    user_ids = [1, 2]
 
     points_added_data = []
     from random import randint
-    
+
     for user_id in user_ids:
         for days_interval in [1, 7, 30, 60]:
             # Создаем точку данных для каждого интервала
             points_added_data.append({
                 "user_id": user_id,
                 "activity_type_id": randint(1, 6),
-                "points_amount": randint(10, 1000),  # Здесь укажи количество добавленных баллов
-                "log_date": datetime.utcnow() -  timedelta(days=days_interval)
+                # Здесь укажи количество добавленных баллов
+                "points_amount": randint(10, 1000),
+                "log_date": datetime.utcnow() - timedelta(days=days_interval)
             })
 
     # Добавляем данные в базу данных
@@ -290,17 +286,19 @@ def add_balance():
 
     # Сохраняем изменения в базе данных
     db.session.commit()
-    
+
     return "Приватная страница"
 
 
 @app.route('/execute')
 def execute():
- 
+
     # Создаем 10 пользователей
     users_data = [
-        {"first_name": "John", "last_name": "Doe", "username": "john_doe", "email": "john@example.com", "password": "password1", "role": "user", "points_balance": 100},
-        {"first_name": "Jane", "last_name": "Doe", "username": "jane_doe", "email": "jane@example.com", "password": "password2", "role": "admin", "points_balance": 150},
+        {"first_name": "John", "last_name": "Doe", "username": "john_doe",
+            "email": "john@example.com", "password": "password1", "role": "user", "points_balance": 100},
+        {"first_name": "Jane", "last_name": "Doe", "username": "jane_doe", "email": "jane@example.com",
+            "password": "password2", "role": "admin", "points_balance": 150},
         # Добавь еще 8 пользователей с аналогичной структурой данных
     ]
 
@@ -354,8 +352,10 @@ def execute():
 
     # Создаем 10 фондов
     funds_data = [
-        {"organization_name": "Fund1", "category": "Animals", "location": "City1", "description": "Description1", "phone_number": "1234567890"},
-        {"organization_name": "Fund2", "category": "Children", "location": "City2", "description": "Description2", "phone_number": "0987654321"},
+        {"organization_name": "Fund1", "category": "Animals", "location": "City1",
+            "description": "Description1", "phone_number": "1234567890"},
+        {"organization_name": "Fund2", "category": "Children", "location": "City2",
+            "description": "Description2", "phone_number": "0987654321"},
         # Добавь еще 8 фондов с аналогичной структурой данных
     ]
 
@@ -365,8 +365,10 @@ def execute():
 
     # Создаем 10 целей фонда
     fund_goals_data = [
-        {"fund_id": 1, "user_id": 1, "name": "Goal1", "collected_amount": 500, "target_amount": 1000, "reached": False, "goal_date": datetime.utcnow()},
-        {"fund_id": 2, "user_id": 2, "name": "Goal2", "collected_amount": 300, "target_amount": 500, "reached": True, "goal_date": datetime.utcnow()},
+        {"fund_id": 1, "user_id": 1, "name": "Goal1", "collected_amount": 500,
+            "target_amount": 1000, "reached": False, "goal_date": datetime.utcnow()},
+        {"fund_id": 2, "user_id": 2, "name": "Goal2", "collected_amount": 300,
+            "target_amount": 500, "reached": True, "goal_date": datetime.utcnow()},
         # Добавь еще 8 целей фонда с аналогичной структурой данных
     ]
 
@@ -376,8 +378,10 @@ def execute():
 
     # Создаем 10 пожертвований
     donations_data = [
-        {"amount_points": 50, "user_id": 1, "fund_goal_id": 1, "donation_date": datetime.utcnow()},
-        {"amount_points": 30, "user_id": 2, "fund_goal_id": 2, "donation_date": datetime.utcnow()},
+        {"amount_points": 50, "user_id": 1, "fund_goal_id": 1,
+            "donation_date": datetime.utcnow()},
+        {"amount_points": 30, "user_id": 2, "fund_goal_id": 2,
+            "donation_date": datetime.utcnow()},
         # Добавь еще 8 пожертвований с аналогичной структурой данных
     ]
 
@@ -394,7 +398,7 @@ def execute():
 @app.route('/activity_types_data')
 def activity_types_data():
 
-        # Создание объектов ActivityType
+    # Создание объектов ActivityType
     activity_types_data = [
         {"name": "Бег", "units": "Километры", "points_per_unit": 5},
         {"name": "Ходьба", "units": "Шаги", "points_per_unit": 3},
