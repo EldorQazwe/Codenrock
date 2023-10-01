@@ -17,8 +17,23 @@ class User(UserMixin, db.Model):
     department_id = db.Column(db.Integer, db.ForeignKey('department.id'))
     donations = db.relationship('Donation', backref='user', lazy=True)
 
+    points_logs = db.relationship('PointsAdded', backref='user', lazy=True)
+
     def __repr__(self):
         return f"User('{self.id}', '{self.username}', '{self.email}', '{self.role}', '{self.company_id}')"
+
+
+class PointsAdded(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    user_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)
+    points_amount = db.Column(db.Integer, nullable=False)
+    log_date = db.Column(db.DateTime, default=datetime.utcnow)
+    
+    activity_type_id = db.Column(db.Integer, db.ForeignKey('activity_type.id'), nullable=False)
+    activity_type = db.relationship('ActivityType', backref='points_added', lazy=True)
+
+    def __repr__(self):
+        return f"PointsAdded('{self.id}', '{self.user_id}', '{self.points_amount}', '{self.log_date}')"
 
 class Company(db.Model):
     id = db.Column(db.Integer, primary_key=True)
@@ -62,7 +77,7 @@ class Activity(db.Model):
     active_date = db.Column(db.DateTime, default=datetime.utcnow)
 
     activity_type_id = db.Column(db.Integer, db.ForeignKey('activity_type.id'), nullable=False)
-
+    
     def __repr__(self):
         return f"Activity('{self.id}')"
 
